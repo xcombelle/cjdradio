@@ -41,7 +41,7 @@ import urllib.request
 import requests
 
 
-from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import socket
 def banner_daemon(g): 
 	while True:
@@ -389,7 +389,7 @@ class Handler:
 		
 
 
-class HTTPServerV6(ThreadingHTTPServer):
+class HTTPServerV6(HTTPServer):
 	address_family = socket.AF_INET6
 
 class internetRadio(): 
@@ -427,57 +427,62 @@ class internetRadio():
 						self.g.bannedStations.append(tmpPeer)
 
 		self.display.set_text("Buffering, please wait…")
-		
-		song = ''
 
-		try: 
-			song = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/random-mp3");
-		except: 
-			print("Could not contact IP "+self.ip)
-		
-		
-		if song!='':
-			self.track=song.split('\n')[0]
-			print (self.track)
-			#add metadata
-			valid=True
-			r = requests.get("http://["+self.ip+"]:55227/mp3?"+urllib.parse.quote(self.track, safe=''), timeout = 8, stream = True)
-			char_array=b""
-			for char in r.iter_content(1024):
-				char_array+=char
-				if len(char_array)>32000000:
-					char_array=b""
-					valid=False
-					print("MP3 file greater than 32000 kilibytes received, aborting")
-					break
-			print ("Finished download")
-			if valid: 
-				home = expanduser("~")
-				datadir=os.path.join(home, ".cjdradio")
+		char_array=b""
 
 
-				with open(os.path.join(datadir,'temp.mp3'), 'wb') as myfile:
-					myfile.write(char_array)
-					myfile.close()
-				self.player = vlc.MediaPlayer(os.path.join(datadir,'temp.mp3'), 'rb')
-				em = self.player.event_manager()
-				em.event_attach(vlc.EventType.MediaPlayerEndReached, self.onEnded, self.player)
+		while len(char_array)==0:
 
+			song = ''
+
+			try: 
+				song = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/random-mp3");
+			except: 
+				print("Could not contact IP "+self.ip)
+			
 				
+			
+			if song!='':
+				self.track=song.split('\n')[0]
+				print (self.track)
+				#add metadata
+				valid=True
+				r = requests.get("http://["+self.ip+"]:55227/mp3?"+urllib.parse.quote(self.track, safe=''), timeout = 8, stream = True)
+				for char in r.iter_content(1024):
+					char_array+=char
+					if len(char_array)>32000000:
+						char_array=b""
+						valid=False
+						print("MP3 file greater than 32000 kilibytes received, aborting")
+						break
+				print ("Finished download")
+				if len(char_array)>0: 
+					home = expanduser("~")
+					datadir=os.path.join(home, ".cjdradio")
 
-				self.display.set_text(song.split("\n")[1]+" - "+song.split("\n")[3]+" ["+song.split("\n")[2]+"]")
-				
-				myid = "Another random"
-				
-				try: 
-					myid = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/id")
+
+					with open(os.path.join(datadir,'temp.mp3'), 'wb') as myfile:
+						myfile.write(char_array)
+						myfile.close()
+					self.player = vlc.MediaPlayer(os.path.join(datadir,'temp.mp3'), 'rb')
+					em = self.player.event_manager()
+					em.event_attach(vlc.EventType.MediaPlayerEndReached, self.onEnded, self.player)
+
 					
-				except: 
-					pass
-				if len(myid)>60:
-					myid = myid[0-60]	
+
+					self.display.set_text(song.split("\n")[1]+" - "+song.split("\n")[3]+" ["+song.split("\n")[2]+"]")
 					
-				self.g.get_builder().get_object("lasttuned").set_text(self.ip+"\n"+myid)
+					myid = "Another random"
+					
+					try: 
+						myid = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/id")
+						
+					except: 
+						pass
+					if len(myid)>60:
+						myid = myid[0-60]	
+						
+					self.g.get_builder().get_object("lasttuned").set_text(self.ip+"\n"+myid)
 				
 				self.player.play()
 		
