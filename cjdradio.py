@@ -233,14 +233,14 @@ class Handler:
 			for p in g.peers: 
 				flacsize = ''
 				try: 
-					flacsize = OcsadURLRetriever.retrieveURL("http://["+p+"]:55227/flac-size")
+					flacsize = OcsadURLRetriever.retrieveURL("http://["+p+"]:55228/flac-size")
 				except: 
 					pass		
 				
 				if len(flacsize)>0: 
 					catalog = []
 					try:
-						catalog = OcsadURLRetriever.retrieveURL("http://["+p+"]:55227/flac-catalog", 32000000).split("\n")
+						catalog = OcsadURLRetriever.retrieveURL("http://["+p+"]:55228/flac-catalog", 32000000).split("\n")
 					except: 
 						pass
 					
@@ -259,7 +259,7 @@ class Handler:
 								try: 
 									temp = b""
 									
-									r = requests.get("http://["+p+"]:55227/flac?"+urllib.parse.quote(i, safe=''), timeout = 800, stream = True)
+									r = requests.get("http://["+p+"]:55228/flac?"+urllib.parse.quote(i, safe=''), timeout = 800, stream = True)
 									for char in r.iter_content(1024):
 										temp+=char
 										if len(temp)>4000000000:
@@ -294,12 +294,12 @@ class Handler:
 			b.get_object("dlstatus").set_text("Stopped")
 							
 							
-	def onComputeSize(self, *rgs):
+	def onComputeSize(self, *args):
 		totalsize=0
 		for p in g.peers: 
 			flacsize = ''
 			try: 
-				flacsize = OcsadURLRetriever.retrieveURL("http://["+p+"]:55227/flac-size")
+				flacsize = OcsadURLRetriever.retrieveURL("http://["+p+"]:55228/flac-size")
 			except: 
 				pass		
 			
@@ -582,9 +582,9 @@ class internetRadio():
 
 
 class OcsadURLRetriever:
-	def retrieveURL(url, max_length = 32000):
+	def retrieveURL(url, max_length = 32000, reqtimeout = 800):
 		try: 
-			r = requests.get(url, timeout=800, stream=True)
+			r = requests.get(url, timeout=reqtimeout, stream=True)
 			char_array=b"";
 			for char in r.iter_content(1024):
 				char_array+=char
@@ -595,7 +595,86 @@ class OcsadURLRetriever:
 			raise ValueError("Invalid Ocsad URL")
 		except: 
 			raise
+class WebRequestHandlerFlac(BaseHTTPRequestHandler):
+	gateway = None
+		
+	def do_GET(self):
+		
+		home = expanduser("~")
+		basedir=os.path.join(home, ".cjdradio")
 
+		path = urllib.parse.urlparse(self.path).path
+		query = urllib.parse.urlparse(self.path).query
+
+		
+		self.send_response(200)
+	
+
+		if (path!="/mp3" and path!="/flac"):
+			self.send_header("Content-Type", "text/plain")
+		else:
+			if path=="/mp3": 
+				self.send_header("Content-Type", "audio/mpeg")
+			if path=="/flac":
+				self.send_header("Content-Type", "audio/flac")
+		
+		self.end_headers()
+
+		if path=='/flac':
+			print (query)
+			basename = os.path.basename(urllib.parse.unquote(query))
+			filepath = os.path.join(g.shared_dir, basename)
+			if basename.endswith(".flac") and os.path.exists(filepath):
+				if not os.path.getsize(filepath) > 4000000000:
+					with open(filepath, 'rb') as myfile:
+						tmp = myfile.read()
+						myfile.close()
+						self.wfile.write(tmp)
+				else:
+					print ("Trying to serve a flac file greater than 4GiB, aborting")				
+		if path=="/flac-size": 
+			reply = ''
+			completed = False
+			while not completed:
+					flacfiles=[]
+					files = os.scandir(g.shared_dir)
+					for flac in files: 
+						if flac.name.endswith(".flac"):
+							flacfiles.append(flac.name)
+							
+					if len(flacfiles)>0:
+						size = 0		
+						for flac in flacfiles:
+							filepath = os.path.join(g.shared_dir, flac)
+							flacsize = os.path.getsize(filepath)
+							
+							size += flacsize
+						reply = str(size)
+						completed = True
+					else:
+						reply="0"
+						completed = True
+			self.wfile.write(reply.encode("utf-8"))
+		if path=="/flac-catalog": 
+			reply = ' '
+			completed = False
+			while not completed:
+					flacfiles=[]
+					files = os.scandir(g.shared_dir)
+					for flac in files: 
+						if flac.name.endswith(".flac"):
+							flacfiles.append(flac.name)
+							
+					if len(flacfiles)>0:
+						size = 0		
+						for flac in flacfiles:
+							reply+=flac+"\n"
+							
+						completed = True
+					else:
+						reply=""
+						completed = True
+			self.wfile.write(reply.encode("utf-8"))
 
 class WebRequestHandler(BaseHTTPRequestHandler):
 	gateway = None
@@ -638,49 +717,6 @@ class WebRequestHandler(BaseHTTPRequestHandler):
 			self.wfile.write("\n".join(self.gateway.get_peers()).encode("utf-8"))
 		if path=="/id":
 			self.wfile.write(self.gateway.ID.encode("utf-8"))
-		if path=="/flac-size": 
-			reply = ''
-			completed = False
-			while not completed:
-					flacfiles=[]
-					files = os.scandir(g.shared_dir)
-					for flac in files: 
-						if flac.name.endswith(".flac"):
-							flacfiles.append(flac.name)
-							
-					if len(flacfiles)>0:
-						size = 0		
-						for flac in flacfiles:
-							filepath = os.path.join(g.shared_dir, flac)
-							flacsize = os.path.getsize(filepath)
-							
-							size += flacsize
-						reply = str(size)
-						completed = True
-					else:
-						reply=""
-						completed = True
-			self.wfile.write(reply.encode("utf-8"))
-		if path=="/flac-catalog": 
-			reply = ''
-			completed = False
-			while not completed:
-					flacfiles=[]
-					files = os.scandir(g.shared_dir)
-					for flac in files: 
-						if flac.name.endswith(".flac"):
-							flacfiles.append(flac.name)
-							
-					if len(flacfiles)>0:
-						size = 0		
-						for flac in flacfiles:
-							reply+=flac+"\n"
-							
-						completed = True
-					else:
-						reply=""
-						completed = True
-			self.wfile.write(reply.encode("utf-8"))
 
 		if path=="/random-mp3":
 			if not self.client_address[0] in self.gateway.peers:
@@ -734,18 +770,6 @@ class WebRequestHandler(BaseHTTPRequestHandler):
 				else:
 					print ("Trying to serve a mp3 file greater than 30000 kilibytes, aborting")
 					
-		if path=='/flac':
-			print (query)
-			basename = os.path.basename(urllib.parse.unquote(query))
-			filepath = os.path.join(g.shared_dir, basename)
-			if basename.endswith(".flac") and os.path.exists(filepath):
-				if not os.path.getsize(filepath) > 4000000000:
-					with open(filepath, 'rb') as myfile:
-						tmp = myfile.read()
-						myfile.close()
-						self.wfile.write(tmp)
-				else:
-					print ("Trying to serve a mp3 file greater than 4GiB, aborting")				
 if __name__ == "__main__":
 	if len(sys.argv)>=2:
 		print ("One command line argument passed. Running in daemon mode without user interface")
@@ -781,18 +805,26 @@ if __name__ == "__main__":
 		ip = sys.argv[5]
 	
 	WebRequestHandler.gateway=o.getGateway()
+	WebRequestHandlerFlac.gateway=o.getGateway()
 	
 	server = HTTPServerV6((ip, 55227), WebRequestHandler)
 	o.getGateway().set_webserver(server)
 	WebserverThread = Thread(target = server.serve_forever)
 	o.getGateway().set_webserverThread(WebserverThread)
-	
+
+	flacserver = HTTPServerV6((ip, 55228), WebRequestHandlerFlac)
+	flacWebserverThread = Thread(target = flacserver.serve_forever)
+
 	if len(sys.argv)==1:
 
 		WebserverThread.daemon = True
+		flacWebserverThread.daemon = True
+
+
 	
+	flacWebserverThread.start()
 	WebserverThread.start()
-	print ("Webserver started")
+	print ("Webservers started")
 	
 	o.getGateway().banner_daemon = Thread(target = banner_daemon, args = (o.getGateway(),))
 	if len(sys.argv)==1:

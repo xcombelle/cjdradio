@@ -119,7 +119,7 @@
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="label" translatable="yes">Tips: it is MANDATORY to set the above option. 
-Make sure port 55227 is open for tun0 in your firewall to actually make things work. 
+Make sure port 55227 is open for tun0 in your firewall to actually make things work. 55228 for Flac shares.
 Your shared music is to be placed in $HOME/.cjdradio/Shares ; downloads go there too. 
 Make sure to firstly Discover New Stations Peers before launching the listening. </property>
             <property name="justify">center</property>
