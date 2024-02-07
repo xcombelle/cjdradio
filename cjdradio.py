@@ -233,7 +233,7 @@ class Handler:
 			for p in g.peers: 
 				flacsize = ''
 				try: 
-					flacsize = OcsadURLRetriever.retrieveURL("http://["+p+"]:55228/flac-size")
+					flacsize = OcsadURLRetriever.retrieveURL("http://["+p+"]:55228/flac-size", reqtimeout = 8)
 				except: 
 					pass		
 				
@@ -299,7 +299,7 @@ class Handler:
 		for p in g.peers: 
 			flacsize = ''
 			try: 
-				flacsize = OcsadURLRetriever.retrieveURL("http://["+p+"]:55228/flac-size")
+				flacsize = OcsadURLRetriever.retrieveURL("http://["+p+"]:55228/flac-size", reqtimeout = 8)
 			except: 
 				pass		
 			
@@ -505,7 +505,7 @@ class internetRadio():
 					tmpPeer = random.choice (self.g.peers)
 					try: 
 						pong = ''
-						pong = OcsadURLRetriever.retrieveURL("http://["+tmpPeer+"]:55227/ping")
+						pong = OcsadURLRetriever.retrieveURL("http://["+tmpPeer+"]:55227/ping", reqtimeout = 8)
 						if pong!='pong':
 							raise ValueError("no replying peer on song request")
 						else:
