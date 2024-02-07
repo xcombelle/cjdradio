@@ -41,7 +41,7 @@ import urllib.request
 import requests
 
 
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import socket
 def banner_daemon(g): 
 	while True:
@@ -477,7 +477,7 @@ class Handler:
 		
 
 
-class HTTPServerV6(HTTPServer):
+class HTTPServerV6(ThreadingHTTPServer):
 	address_family = socket.AF_INET6
 
 class internetRadio(): 
