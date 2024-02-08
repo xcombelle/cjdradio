@@ -826,7 +826,7 @@ if __name__ == "__main__":
 
 		o.getGateway().banner_daemon.daemon = True
 	
-	o.getGateway().banner_daemon.start()
+		o.getGateway().banner_daemon.start()
 	
 	print ("Banned stations update UI daemon started")
 
