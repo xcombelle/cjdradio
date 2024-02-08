@@ -28,6 +28,7 @@
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="margin-top">5</property>
             <child>
               <object class="GtkLabel">
                 <property name="visible">True</property>
@@ -66,6 +67,7 @@
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="margin-top">5</property>
             <child>
               <object class="GtkLabel">
                 <property name="visible">True</property>
@@ -98,6 +100,7 @@
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="margin-end">10</property>
                 <signal name="clicked" handler="onWebserverRestart" swapped="no"/>
               </object>
               <packing>
@@ -118,6 +121,8 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="margin-top">5</property>
+            <property name="margin-bottom">5</property>
             <property name="label" translatable="yes">Tips: it is MANDATORY to set the above option. 
 Make sure port 55227 is open for tun0 in your firewall to actually make things work. 55228 for Flac shares.
 Your shared music is to be placed in $HOME/.cjdradio/Shares ; downloads go there too. 
@@ -131,9 +136,22 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
           </packing>
         </child>
         <child>
+          <object class="GtkSeparator">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">4</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="margin-top">5</property>
+            <property name="margin-bottom">4</property>
             <child>
               <object class="GtkLabel">
                 <property name="visible">True</property>
@@ -159,7 +177,7 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
             </child>
             <child>
               <object class="GtkButton" id="discover_button">
-                <property name="label" translatable="yes">Discover New Stations Peers</property>
+                <property name="label" translatable="yes">Discover New Stations Peers (0)</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
@@ -175,13 +193,14 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">4</property>
+            <property name="position">5</property>
           </packing>
         </child>
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="margin-bottom">5</property>
             <child>
               <object class="GtkLabel">
                 <property name="visible">True</property>
@@ -213,6 +232,7 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="margin-end">10</property>
                 <signal name="clicked" handler="onAddPeerIP" swapped="no"/>
               </object>
               <packing>
@@ -226,29 +246,13 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">5</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <property name="label" translatable="yes">Listening to the radios:</property>
-            <property name="justify">center</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
             <property name="position">6</property>
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
-            <property name="label" translatable="yes">Launch general, multi-stations radio</property>
+          <object class="GtkSeparator">
             <property name="visible">True</property>
-            <property name="can-focus">True</property>
-            <property name="receives-default">True</property>
-            <signal name="clicked" handler="onRadio" swapped="no"/>
+            <property name="can-focus">False</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -257,17 +261,64 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
           </packing>
         </child>
         <child>
-          <object class="GtkButton">
-            <property name="label" translatable="yes">Launch local Shares radio</property>
+          <object class="GtkLabel">
             <property name="visible">True</property>
-            <property name="can-focus">True</property>
-            <property name="receives-default">True</property>
-            <signal name="clicked" handler="onRadioShares" swapped="no"/>
+            <property name="can-focus">False</property>
+            <property name="margin-top">5</property>
+            <property name="label" translatable="yes">Listening to the radios:</property>
+            <property name="justify">center</property>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">8</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton">
+            <property name="label" translatable="yes">Launch general, multi-stations radio</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <property name="margin-start">40</property>
+            <property name="margin-end">40</property>
+            <property name="margin-top">10</property>
+            <property name="margin-bottom">2</property>
+            <signal name="clicked" handler="onRadio" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">9</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton">
+            <property name="label" translatable="yes">Launch local Shares radio</property>
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <property name="margin-start">40</property>
+            <property name="margin-end">40</property>
+            <property name="margin-top">2</property>
+            <property name="margin-bottom">10</property>
+            <signal name="clicked" handler="onRadioShares" swapped="no"/>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">10</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSeparator">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">11</property>
           </packing>
         </child>
         <child>
@@ -279,13 +330,14 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">9</property>
+            <property name="position">12</property>
           </packing>
         </child>
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="margin-bottom">5</property>
             <child>
               <object class="GtkComboBoxText" id="cbsinglestation">
                 <property name="visible">True</property>
@@ -311,17 +363,35 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
                 <property name="position">1</property>
               </packing>
             </child>
+            <child>
+              <object class="GtkButton" id="banned">
+                <property name="label" translatable="yes">Clear banned stations (0)</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="margin-end">10</property>
+                <signal name="clicked" handler="onBanned" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="pack-type">end</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">10</property>
+            <property name="position">13</property>
           </packing>
         </child>
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="margin-top">8</property>
+            <property name="margin-bottom">8</property>
             <child>
               <object class="GtkLabel">
                 <property name="visible">True</property>
@@ -350,7 +420,18 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">11</property>
+            <property name="position">14</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSeparator">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">15</property>
           </packing>
         </child>
         <child>
@@ -362,13 +443,14 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">12</property>
+            <property name="position">16</property>
           </packing>
         </child>
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="margin-bottom">5</property>
             <child>
               <object class="GtkLabel">
                 <property name="visible">True</property>
@@ -401,6 +483,7 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="margin-start">5</property>
                 <signal name="clicked" handler="onSkip" swapped="no"/>
               </object>
               <packing>
@@ -429,6 +512,7 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="margin-end">5</property>
                 <signal name="clicked" handler="onStop" swapped="no"/>
               </object>
               <packing>
@@ -442,31 +526,45 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">13</property>
+            <property name="position">17</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSeparator">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">18</property>
           </packing>
         </child>
         <child>
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="label" translatable="yes">All FLACs download (to $HOME/.cdjradio/Downloads)</property>
+            <property name="label" translatable="yes">Download all FLACs on the network to $HOME/.cdjradio/Downloads: </property>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">14</property>
+            <property name="position">19</property>
           </packing>
         </child>
         <child>
           <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
+            <property name="margin-top">5</property>
+            <property name="margin-bottom">5</property>
             <child>
               <object class="GtkButton">
                 <property name="label" translatable="yes">Compute size</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="margin-start">10</property>
                 <signal name="clicked" handler="onComputeSize" swapped="no"/>
               </object>
               <packing>
@@ -479,6 +577,7 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
               <object class="GtkBox">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
+                <property name="margin-end">10</property>
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkLabel">
@@ -529,6 +628,7 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="margin-end">10</property>
                 <signal name="clicked" handler="onDL" swapped="no"/>
               </object>
               <packing>
@@ -542,7 +642,7 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">15</property>
+            <property name="position">20</property>
           </packing>
         </child>
       </object>

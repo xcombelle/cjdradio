@@ -45,16 +45,8 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import socket
 def banner_daemon(g): 
 	while True:
-		if len(g.peers)>0:	
-			for sta in g.peers:
-				try: 
-					OcsadURLRetriever.retrieveURL("http://["+sta+"]:55227/ping")
-				except: 
-					g.bannedStations.append(sta)
-				finally:
-					sleep (25)
-		else:
-			sleep(50)
+		g.getBuilder().get_object("banned").set_text("Clear banned stations ("+str(len(g.bannedStations))+")")
+		sleep(50)
 class Cjdradio:
 	g = None;
 	h = None;
@@ -323,6 +315,9 @@ class Handler:
 				print("radio is playing")
 				g.radio.stop()
 				b.get_object("nowplaying").set_text("(nothing currently)")
+	def onBanned(self, *args):
+		g.bannedStations=[]
+		g.getBuilder().get_object("Banned").set_text("Clear banned stations (0)")
 
 	def onDiscoverPeers(self, *args):
 		b.get_object("discover_button").set_label("Discovering peers…")
@@ -336,7 +331,7 @@ class Handler:
 			b.get_object("cbsinglestation").append_text(i)
 		
 		b.get_object("cbsinglestation").set_active(0)
-		b.get_object("discover_button").set_label("Discover new stations peers")
+		b.get_object("discover_button").set_label("Discover new stations peers ("+str(len(g.peers))+")")
 		
 		
 	def discoverPeers(self):
@@ -831,9 +826,9 @@ if __name__ == "__main__":
 
 		o.getGateway().banner_daemon.daemon = True
 	
-	#o.getGateway().banner_daemon.start()
+	o.getGateway().banner_daemon.start()
 	
-	#print ("Banner daemon started")
+	print ("Banned stations update UI daemon started")
 
 	home = expanduser("~")
 	basedir=os.path.join(home, ".cjdradio")
