@@ -229,7 +229,7 @@ class Handler:
 			self.onRadioShares(args)
 	def onRadioSingle(self, *args): 
 		if g.radio is None or (g.radio is not None and not g.radio.player.is_playing()):
-			ir = internetRadio(g, b.get_object("nowplaying"), False, b.get_object("cbsinglestation").get_active_text())
+			ir = internetRadio(g, b.get_object("nowplaying"), False, b.get_object("cbsinglestation").get_active_text().split("\n")[0])
 			g.radio = ir
 			ir.play()
 		else:
@@ -535,6 +535,11 @@ class internetRadio():
 		self.player = vlc.MediaPlayer()
 		
 	def play(self):
+		
+		self.display.set_text("Selecting a station and buffering…")
+					
+		
+		
 		import threading
 		lock = threading.Lock()
 		lock.acquire()
@@ -545,7 +550,6 @@ class internetRadio():
 			if (self.isMultiPeers): 
 				self.ip = ''
 				while self.ip == '':
-					self.display.set_text("Selecting a station…")
 					peer = ''
 					while peer=='' or peer in self.g.bannedStations:
 						tmpPeer = random.choice (self.g.peers)
@@ -580,8 +584,7 @@ class internetRadio():
 	
 				return
 
-			self.display.set_text("Buffering, please wait…")
-
+			
 			char_array=b""
 
 
