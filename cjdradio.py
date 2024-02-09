@@ -442,6 +442,8 @@ class Handler:
 			shared_dir=os.path.join(basedir, "Shares")
 			
 			if not os.path.exists(os.path.join(shared_dir, g.radio.track)):
+				g.radio.player.stop()
+				
 				os.rename(os.path.join(basedir, "temp.mp3"), os.path.join(shared_dir, g.radio.track))
 				dialog = Gtk.MessageDialog(
 							parent=b.get_object("cjdradio_main_window") ,
@@ -453,6 +455,8 @@ class Handler:
 				dialog.format_secondary_text("Downloaded to Shares. MP3s will be reindexed upon next restart. ")
 				dialog.run()
 				dialog.destroy()
+				
+				g.radio.play()
 			else: 
 				dialog = Gtk.MessageDialog(
 							parent=b.get_object("cjdradio_main_window") ,
