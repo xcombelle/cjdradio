@@ -599,8 +599,10 @@ class internetRadio():
 						
 					self.g.get_builder().get_object("lasttuned").set_text(self.ip+"\n"+myid)
 				
-				self.player.play()
-		
+				try: 
+					self.player.play()
+				except: 
+					self.play()
 	def stop(self):
 		self.player.stop()
 	
