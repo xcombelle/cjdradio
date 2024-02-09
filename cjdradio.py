@@ -212,7 +212,7 @@ class Handler:
 		return b
 		
 	def onRadio(self, *args): 
-		if g.radio is None or (not g.radio is None and not g.radio.player.is_playing()):
+		if g.radio is None or (g.radio is not None and not g.radio.player.is_playing()):
 			ir = internetRadio(g, b.get_object("nowplaying"), True)
 			g.radio = ir
 			ir.play()
@@ -220,7 +220,7 @@ class Handler:
 			g.radio.stop()
 			self.onRadio(args)
 	def onRadioShares(self, *args): 
-		if g.radio is None or (not g.radio is None and not g.radio.player.is_playing()):
+		if g.radio is None or (g.radio is not None and not g.radio.player.is_playing()):
 			ir = internetRadio(g, b.get_object("nowplaying"), False, g.peers[0])
 			g.radio = ir
 			ir.play()
@@ -228,7 +228,7 @@ class Handler:
 			g.radio.stop()
 			self.onRadioShares(args)
 	def onRadioSingle(self, *args): 
-		if g.radio is None or (not g.radio is None and not g.radio.player.is_playing()):
+		if g.radio is None or (g.radio is not None and not g.radio.player.is_playing()):
 			ir = internetRadio(g, b.get_object("nowplaying"), False, b.get_object("cbsinglestation").get_active_text())
 			g.radio = ir
 			ir.play()
@@ -563,6 +563,7 @@ class internetRadio():
 							for i in self.g.peers: 
 								if i not in self.g.bannedStations:
 									self.g.get_builder().get_object("cbsinglestation").append_text(i)
+									self.g.get_builder().get_object("cbsinglestation").set_active(0)
 			else: 
 				try: 
 					pong = ''
@@ -911,9 +912,9 @@ if __name__ == "__main__":
 
 		o.getGateway().banner_daemon.daemon = True
 	
-		o.getGateway().banner_daemon.start()
+		#o.getGateway().banner_daemon.start()
 	
-	print ("Banned stations update UI daemon started")
+	#print ("Banned stations update UI daemon started")
 
 	home = expanduser("~")
 	basedir=os.path.join(home, ".cjdradio")

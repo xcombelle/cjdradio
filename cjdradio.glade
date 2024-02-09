@@ -365,7 +365,7 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
             </child>
             <child>
               <object class="GtkButton" id="banned">
-                <property name="label" translatable="yes">Clear banned stations (0)</property>
+                <property name="label" translatable="yes">Clear banned stations</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
