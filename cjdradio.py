@@ -45,7 +45,7 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import socket
 def banner_daemon(g): 
 	while True:
-		g.get_builder().get_object("banned").set_text("Clear banned stations ("+str(len(g.bannedStations))+")")
+		g.get_builder().get_object("banned").set_label("Clear banned stations ("+str(len(g.bannedStations))+")")
 		sleep(50)
 class Cjdradio:
 	g = None;
@@ -159,7 +159,23 @@ class Gateway:
 				myfile.close()
 
 		if len(sys.argv)==1:
+			
+			home = expanduser("~")
+			basedir=os.path.join(home, ".cjdradio")
+			
+			if not os.path.isdir(basedir):
+				os.makedirs(basedir)
 
+			if os.path.exists(os.path.join(basedir, "settings_id.txt")): 
+				with open(os.path.join(basedir,'settings_id.txt'), 'r') as myfile:
+					self.ID=myfile.read()
+					myfile.close()
+				self.builder.get_object("station_id").set_text(self.ID)
+
+			
+			
+			
+			
 			self.builder.get_object("cb_initial_peers").remove_all()
 			for peer in peerList:
 				if peer!='': 
@@ -388,7 +404,20 @@ class Handler:
 		Gtk.main_quit()
 	def onID(self, *args):
 		g.ID = b.get_object("station_id").get_text()
-		print (g.ID)
+
+		home = expanduser("~")
+		basedir=os.path.join(home, ".cjdradio")
+		
+		if not os.path.isdir(basedir):
+			os.makedirs(basedir)
+
+
+							
+		with open(os.path.join(basedir,'settings_id.txt'), 'w') as myfile:
+			myfile.write("%s" % g.ID)
+			myfile.close()
+
+
 	def onDownload (self, *args): 
 		print("Downloading")
 		if g.radio!=None:
@@ -421,7 +450,7 @@ class Handler:
 				dialog.format_secondary_text("There is already a file of this name in Shares. Maybe you already d/l'ed it? ")
 				dialog.run()
 				dialog.destroy()
-
+	
 			
 	def onAddPeerIP(self, *args): 
 		newIP=b.get_object("new_peer_ip").get_text()
