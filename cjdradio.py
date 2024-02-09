@@ -44,8 +44,11 @@ import requests
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import socket
 def banner_daemon(g): 
+	import threading
 	while True:
-		g.get_builder().get_object("banned").set_label("Clear banned stations ("+str(len(g.bannedStations))+")")
+		lock = threading.Lock()
+		with lock:
+			g.get_builder().get_object("banned").set_label("Clear banned stations ("+str(len(g.bannedStations))+")")
 		sleep(50)
 class Cjdradio:
 	g = None;
@@ -333,7 +336,7 @@ class Handler:
 				b.get_object("nowplaying").set_text("(nothing currently)")
 	def onBanned(self, *args):
 		g.bannedStations=[]
-		g.get_builder().get_object("Banned").set_text("Clear banned stations (0)")
+		g.get_builder().get_object("banned").set_label("Clear banned stations (0)")
 
 	def onDiscoverPeers(self, *args):
 		b.get_object("discover_button").set_label("Discovering peers…")
