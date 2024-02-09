@@ -47,8 +47,11 @@ def banner_daemon(g):
 	import threading
 	while True:
 		lock = threading.Lock()
-		with lock:
+		lock.acquire();
+		try:
 			g.get_builder().get_object("banned").set_label("Clear banned stations ("+str(len(g.bannedStations))+")")
+		finally: 
+			lock.release()
 		sleep(50)
 class Cjdradio:
 	g = None;
@@ -192,6 +195,8 @@ class Gateway:
 			self.scan = os.scandir (self.shared_dir)
 		return self.scan
 class Handler:
+
+
 	b = None
 	g = None
 
@@ -354,47 +359,53 @@ class Handler:
 		
 		
 	def discoverPeers(self):
-		g.set_processedPeers([])
-		g.set_peers([])
-		
-		newpeers = []
-		
-		
-		
-		g.peers.append(g.get_settings_ip6addr())
+		import threading
+		lock=threading.Lock()
+		lock.acquire()
 		
 		try: 
-			newpeers = OcsadURLRetriever.retrieveURL("http://["+b.get_object("cb_initial_peers").get_active_text()+"]:55227/listpeers").split("\n")
-		except: 
+			g.set_processedPeers([])
+			g.set_peers([])
+			
+			newpeers = []
+			
+			
+			
+			g.peers.append(g.get_settings_ip6addr())
+			
+			try: 
+				newpeers = OcsadURLRetriever.retrieveURL("http://["+b.get_object("cb_initial_peers").get_active_text()+"]:55227/listpeers").split("\n")
+			except: 
+				dialog = Gtk.MessageDialog(
+					parent=b.get_object("cjdradio_main_window") ,
+					modal=True,
+					message_type=Gtk.MessageType.INFO,
+					buttons=Gtk.ButtonsType.OK,
+					text="Sorry!  "
+				)
+				dialog.format_secondary_text("This initial peer is currently offline")
+				dialog.run()
+				dialog.destroy()
+			
+			newnewpeers = []
+			for p in newpeers:
+				if not p in g.peers: 
+					newnewpeers.append(p)
+			
+			g.set_peers(g.peers+newnewpeers)
+			
 			dialog = Gtk.MessageDialog(
-				parent=b.get_object("cjdradio_main_window") ,
-				modal=True,
-				message_type=Gtk.MessageType.INFO,
-				buttons=Gtk.ButtonsType.OK,
-				text="Sorry!  "
-			)
-			dialog.format_secondary_text("This initial peer is currently offline")
+					parent=b.get_object("cjdradio_main_window") ,
+					modal=True,
+					message_type=Gtk.MessageType.INFO,
+					buttons=Gtk.ButtonsType.OK,
+					text="Discover finished.  "
+				)
+			dialog.format_secondary_text(str(len(g.get_peers()))+" peers discovered")
 			dialog.run()
 			dialog.destroy()
-		
-		newnewpeers = []
-		for p in newpeers:
-			if not p in g.peers: 
-				newnewpeers.append(p)
-		
-		g.set_peers(g.peers+newnewpeers)
-		
-		dialog = Gtk.MessageDialog(
-				parent=b.get_object("cjdradio_main_window") ,
-				modal=True,
-				message_type=Gtk.MessageType.INFO,
-				buttons=Gtk.ButtonsType.OK,
-				text="Discover finished.  "
-			)
-		dialog.format_secondary_text(str(len(g.get_peers()))+" peers discovered")
-		dialog.run()
-		dialog.destroy()
-
+		finally: 
+			lock.release();
 
 
 
@@ -523,86 +534,95 @@ class internetRadio():
 		self.display = display_text_setter
 		
 	def play(self):
-		if (self.isMultiPeers): 
-			self.ip = ''
-			while self.ip == '':
-				self.display.set_text("Selecting a station…")
-				peer = ''
-				while peer=='' or peer in self.g.bannedStations:
-					tmpPeer = random.choice (self.g.peers)
-					try: 
-						pong = ''
-						pong = OcsadURLRetriever.retrieveURL("http://["+tmpPeer+"]:55227/ping", reqtimeout = 8)
-						if pong!='pong':
-							raise ValueError("no replying peer on song request")
-						else:
-							peer = tmpPeer
-							self.ip = tmpPeer
-					except: 
-						self.g.bannedStations.append(tmpPeer)
+		import threading
+		lock = threading.Lock()
+		lock.acquire()
+		
+		try: 
+		
+		
+			if (self.isMultiPeers): 
+				self.ip = ''
+				while self.ip == '':
+					self.display.set_text("Selecting a station…")
+					peer = ''
+					while peer=='' or peer in self.g.bannedStations:
+						tmpPeer = random.choice (self.g.peers)
+						try: 
+							pong = ''
+							pong = OcsadURLRetriever.retrieveURL("http://["+tmpPeer+"]:55227/ping", reqtimeout = 8)
+							if pong!='pong':
+								raise ValueError("no replying peer on song request")
+							else:
+								peer = tmpPeer
+								self.ip = tmpPeer
+						except: 
+							self.g.bannedStations.append(tmpPeer)
 
-		self.display.set_text("Buffering, please wait…")
+			self.display.set_text("Buffering, please wait…")
 
-		char_array=b""
-
-
-		while len(char_array)==0:
-
-			song = ''
-
-			try: 
-				song = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/random-mp3");
-			except: 
-				print("Could not contact IP "+self.ip)
-			
-				
-			
-			if song!='':
-				self.track=song.split('\n')[0]
-				print (self.track)
-				#add metadata
-				valid=True
-				r = requests.get("http://["+self.ip+"]:55227/mp3?"+urllib.parse.quote(self.track, safe=''), timeout = 8, stream = True)
-				for char in r.iter_content(1024):
-					char_array+=char
-					if len(char_array)>32000000:
-						char_array=b""
-						valid=False
-						print("MP3 file greater than 32000 kilibytes received, aborting")
-						break
-				print ("Finished download")
-				if len(char_array)>0: 
-					home = expanduser("~")
-					datadir=os.path.join(home, ".cjdradio")
+			char_array=b""
 
 
-					with open(os.path.join(datadir,'temp.mp3'), 'wb') as myfile:
-						myfile.write(char_array)
-						myfile.close()
-					self.player = vlc.MediaPlayer(os.path.join(datadir,'temp.mp3'), 'rb')
-					em = self.player.event_manager()
-					em.event_attach(vlc.EventType.MediaPlayerEndReached, self.onEnded, self.player)
+			while len(char_array)==0:
 
-					
+				song = ''
 
-					self.display.set_text(song.split("\n")[1]+" - "+song.split("\n")[3]+" ["+song.split("\n")[2]+"]")
-					
-					myid = "Another random"
-					
-					try: 
-						myid = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/id")
-						
-					except: 
-						pass
-					if len(myid)>60:
-						myid = myid[0-60]	
-						
-					self.g.get_builder().get_object("lasttuned").set_text(self.ip+"\n"+myid)
-				
 				try: 
-					self.player.play()
+					song = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/random-mp3");
 				except: 
-					self.play()
+					print("Could not contact IP "+self.ip)
+				
+					
+				
+				if song!='':
+					self.track=song.split('\n')[0]
+					print (self.track)
+					#add metadata
+					valid=True
+					r = requests.get("http://["+self.ip+"]:55227/mp3?"+urllib.parse.quote(self.track, safe=''), timeout = 8, stream = True)
+					for char in r.iter_content(1024):
+						char_array+=char
+						if len(char_array)>32000000:
+							char_array=b""
+							valid=False
+							print("MP3 file greater than 32000 kilibytes received, aborting")
+							break
+					print ("Finished download")
+					if len(char_array)>0: 
+						home = expanduser("~")
+						datadir=os.path.join(home, ".cjdradio")
+
+
+						with open(os.path.join(datadir,'temp.mp3'), 'wb') as myfile:
+							myfile.write(char_array)
+							myfile.close()
+						self.player = vlc.MediaPlayer(os.path.join(datadir,'temp.mp3'), 'rb')
+						em = self.player.event_manager()
+						em.event_attach(vlc.EventType.MediaPlayerEndReached, self.onEnded, self.player)
+
+						
+
+						self.display.set_text(song.split("\n")[1]+" - "+song.split("\n")[3]+" ["+song.split("\n")[2]+"]")
+						
+						myid = "Another random"
+						
+						try: 
+							myid = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/id")
+							
+						except: 
+							pass
+						if len(myid)>60:
+							myid = myid[0-60]	
+							
+						self.g.get_builder().get_object("lasttuned").set_text(self.ip+"\n"+myid)
+					
+					try: 
+						self.player.play()
+					except: 
+						self.play()
+		finally: 
+			lock.release()
 	def stop(self):
 		self.player.stop()
 	
