@@ -229,7 +229,7 @@ class Handler:
 			self.onRadioShares(args)
 	def onRadioSingle(self, *args): 
 		if g.radio is None or (g.radio is not None and not g.radio.player.is_playing()):
-			ir = internetRadio(g, b.get_object("nowplaying"), False, b.get_object("cbsinglestation").get_active_text().split("\n")[0])
+			ir = internetRadio(g, b.get_object("nowplaying"), False, b.get_object("cbsinglestation").get_active_text())
 			g.radio = ir
 			ir.play()
 		else:
@@ -559,7 +559,7 @@ class internetRadio():
 						tmpPeer = random.choice (self.g.peers)
 						try: 
 							pong = ''
-							pong = OcsadURLRetriever.retrieveURL("http://["+tmpPeer+"]:55227/ping", reqtimeout = 8)
+							pong = OcsadURLRetriever.retrieveURL("http://["+tmpPeer+"]:55227/ping",  max_length = 120000, reqtimeout = 8)
 							if pong!='pong':
 								raise ValueError("no replying peer on song request")
 							else:
@@ -575,7 +575,7 @@ class internetRadio():
 			else: 
 				try: 
 					pong = ''
-					pong = OcsadURLRetriever.retrieveURL("http://["+tmpPeer+"]:55227/ping", reqtimeout = 8)
+					pong = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/ping", max_length = 120000, reqtimeout = 8)
 					if pong!='pong':
 						raise ValueError("no replying peer on song request")
 				except: 
@@ -584,9 +584,12 @@ class internetRadio():
 					for i in self.g.peers: 
 						if i not in self.g.bannedStations:
 							self.g.get_builder().get_object("cbsinglestation").append_text(i)
-				self.g.get_builder().get_object("cbsinglestation").set_active(0)
-	
-				return
+					self.g.get_builder().get_object("cbsinglestation").set_active(0)
+		
+					return
+				
+				
+				
 
 			
 			char_array=b""
