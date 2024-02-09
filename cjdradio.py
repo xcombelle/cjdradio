@@ -627,8 +627,14 @@ class internetRadio():
 		self.player.stop()
 	
 	def onEnded(self, event, player): 
-		self.play();
-
+		import threading
+		lock = threading.Lock()
+		lock.acquire()
+		
+		try: 
+			self.play();
+		finally: 
+			lock.release()
 
 class OcsadURLRetriever:
 	def retrieveURL(url, max_length = 32000, reqtimeout = 800):
