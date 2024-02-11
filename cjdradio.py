@@ -260,6 +260,83 @@ class Handler:
 		
 	def getBuilder(self):
 		return b
+	def onMove(self, args):
+		libre = []
+		mp3files = []
+		
+		libre.append(b.get_object("libre1").get_text())
+		libre.append(b.get_object("libre2").get_text())
+		libre.append(b.get_object("libre3").get_text())
+		libre.append(b.get_object("libre4").get_text())
+		libre.append(b.get_object("libre5").get_text())
+		libre.append(b.get_object("libre6").get_text())
+		libre.append(b.get_object("libre7").get_text())
+		libre.append(b.get_object("libre8").get_text())
+		libre.append(b.get_object("libre9").get_text())
+		libre.append(b.get_object("libre10").get_text())
+		libre.append(b.get_object("libre11").get_text())
+		libre.append(b.get_object("libre12").get_text())
+		libre.append(b.get_object("libre13").get_text())
+		libre.append(b.get_object("libre14").get_text())
+		libre.append(b.get_object("libre15").get_text())
+		libre.append(b.get_object("libre16").get_text())
+		libre.append(b.get_object("libre17").get_text())
+		libre.append(b.get_object("libre18").get_text())
+		libre.append(b.get_object("libre19").get_text())
+		libre.append(b.get_object("libre20").get_text())
+		libre.append(b.get_object("libre21").get_text())
+		libre.append(b.get_object("libre22").get_text())
+		libre.append(b.get_object("libre23").get_text())
+		libre.append(b.get_object("libre24").get_text())
+		libre.append(b.get_object("libre25").get_text())
+		libre.append(b.get_object("libre26").get_text())
+		libre.append(b.get_object("libre27").get_text())
+		libre.append(b.get_object("libre28").get_text())
+		
+		shareddir = g.shared_dir
+		
+		home = expanduser("~")
+		basedir=os.path.join(home, ".cjdradio")
+		
+		unshareddir = os.path.join(basedir, "Unshared")
+		if not os.path.exists(unshareddir):
+			os.makedirs(unshareddir)
+		files = os.scandir(unshareddir)
+		for mp3 in files: 
+			if mp3.name.endswith(".mp3"):
+				mp3files.append(mp3)
+		counter = 0
+		for mp3file in mp3files:
+			tags = TinyTag.get(os.path.join(unshareddir, mp3file.name))
+			
+			tobemoved = False
+			for l in libre: 
+				if not tags.comment is None and l!= '' and l in tags.comment: 
+					tobemoved = True
+			if tobemoved: 
+				counter=counter+1
+				os.rename(os.path.join(unshareddir, mp3file.name), os.path.join(shareddir, mp3file.name))
+		
+		dialog = Gtk.MessageDialog(
+					parent=b.get_object("cjdradio_main_window") ,
+					modal=True,
+					message_type=Gtk.MessageType.INFO,
+					buttons=Gtk.ButtonsType.OK,
+					text="Process finished.  "
+				)
+		dialog.format_secondary_text(str(counter)+" files moved as found sharables. They will be indexed upon next restart. ")
+		dialog.run()
+		dialog.destroy()	
+						
+	def onMoveHide(self, *args): 
+		b.get_object("move_win").hide()
+		return True
+
+	def onMoveShow(self, *args): 
+		b.get_object("move_win").show()
+
+
+		
 	def onBanArtist (self, *args): 
 		g.bannedArtists.append(g.radio.artist)
 		g.radio.stop()
@@ -639,7 +716,7 @@ class internetRadio():
 		
 		self.display.set_text("Selecting a station and buffering…")
 					
-		
+		running = True
 		
 		import threading
 		lock = threading.Lock()
@@ -690,17 +767,20 @@ class internetRadio():
 
 			
 			char_array=b""
+			running = True
 
-
-			while len(char_array)==0:
+			while len(char_array)==0 and running:
 
 				song = ''
 
 				try: 
 					song = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/random-mp3");
+					if len(song.split('\n'))<4:
+						song = ''
+						running = False
 				except: 
 					print("Could not contact IP "+self.ip)
-				
+					
 					
 				
 				if song!='':
@@ -755,6 +835,8 @@ class internetRadio():
 						self.player.play()
 					except: 
 						self.play()
+			if not running: 
+				self.play()
 		finally: 
 			lock.release()
 	def stop(self):
