@@ -46,13 +46,61 @@ import socket
 def banner_daemon(g): 
 	import threading
 	while True:
+		sleep(150)
 		lock = threading.Lock()
 		lock.acquire();
 		try:
-			g.get_builder().get_object("banned").set_label("Clear banned stations ("+str(len(g.bannedStations))+")")
+			#first off we re-register to the tracker in case it rebooted and forgot us in the meanwhile
+			if len(g.peers)>0: #but only if we registered previously, because we are not traitorware and won't joint the network without prior consent
+				g.set_peers([])
+				
+				newpeers = []
+				
+				
+				
+				g.peers.append(g.get_settings_ip6addr())
+				
+				try: 
+					newpeers = OcsadURLRetriever.retrieveURL("http://["+b.get_object("cb_initial_peers").get_active_text()+"]:55227/listpeers", reqtimeout = 12).split("\n")
+
+					newnewpeers = []
+					for p in newpeers:
+						if not p in g.peers: 
+							newnewpeers.append(p)
+					
+					g.set_peers(g.peers+newnewpeers)
+					
+					if len(sys.argv) == 1:
+						#GUI mode, update gui
+						b.get_object("cbsinglestation").remove_all()
+		
+						for i in g.peers:
+							b.get_object("cbsinglestation").append_text(i)
+						
+						b.get_object("cbsinglestation").set_active(0)
+						b.get_object("discover_button").set_label("Discover new stations peers ("+str(len(g.peers))+")")
+
+
+				except: 
+					print ("Initial peer not responding")
+					
+			#then we can retest each banned peer to see if it pong and if so remove it from banned
+			newBanned = []
+			for p in g.bannedStations: 
+				try: 
+					pong = ''
+					pong = OcsadURLRetriever.retrieveURL("http://["+p+"]:55227/ping",  max_length = 120000, reqtimeout = 8)
+					if pong!='pong':
+						raise ValueError("no replying peer "+p+" on ping request")
+				except: 
+					newBanned.append(tmpPeer)
+					
+			g.bannedStations = newBanned
+
+			
 		finally: 
 			lock.release()
-		sleep(50)
+		
 class Cjdradio:
 	g = None;
 	h = None;
@@ -341,7 +389,7 @@ class Handler:
 				b.get_object("nowplaying").set_text("(nothing currently)")
 	def onBanned(self, *args):
 		g.bannedStations=[]
-		g.get_builder().get_object("banned").set_label("Clear banned stations (0)")
+		g.get_builder().get_object("banned").set_label("Clear banned stations")
 
 	def onDiscoverPeers(self, *args):
 		b.get_object("discover_button").set_label("Discovering peers…")
@@ -742,7 +790,7 @@ class WebRequestHandlerFlac(BaseHTTPRequestHandler):
 						completed = True
 			self.wfile.write(reply.encode("utf-8"))
 		if path=="/flac-catalog": 
-			reply = ' '
+			reply = ''
 			completed = False
 			while not completed:
 					flacfiles=[]
@@ -922,9 +970,9 @@ if __name__ == "__main__":
 
 		o.getGateway().banner_daemon.daemon = True
 	
-		#o.getGateway().banner_daemon.start()
+		o.getGateway().banner_daemon.start()
 	
-	#print ("Banned stations update UI daemon started")
+	print ("Banned stations daemon started")
 
 	home = expanduser("~")
 	basedir=os.path.join(home, ".cjdradio")
