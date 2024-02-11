@@ -93,7 +93,7 @@ def banner_daemon(g):
 					if pong!='pong':
 						raise ValueError("no replying peer "+p+" on ping request")
 				except: 
-					newBanned.append(tmpPeer)
+					newBanned.append(p)
 					
 			g.bannedStations = newBanned
 
@@ -136,6 +136,8 @@ class Cjdradio:
 
 
 class Gateway:
+
+	bannedArtists=[]
 
 	dling = False;
 
@@ -258,7 +260,12 @@ class Handler:
 		
 	def getBuilder(self):
 		return b
-		
+	def onBanArtist (self, *args): 
+		g.bannedArtists.append(g.radio.artist)
+		g.radio.stop()
+		g.radio.play()
+	def onClearBannedArtists (self, *args):
+		g.bannedArtists = []
 	def onRadio(self, *args): 
 		if g.radio is None or (g.radio is not None and not g.radio.player.is_playing()):
 			ir = internetRadio(g, b.get_object("nowplaying"), True)
@@ -579,6 +586,8 @@ class internetRadio():
 	track = ''
 	player=None;
 	
+	artist = ''
+	
 	def __init__ (self, gateway, display_text_setter, isMultiPeers = True, ip = '', ):
 		self.ip=ip
 		self.g=gateway
@@ -681,7 +690,12 @@ class internetRadio():
 						em.event_attach(vlc.EventType.MediaPlayerEndReached, self.onEnded, self.player)
 
 						
-
+						self.artist = song.split("\n")[1]
+						
+						if self.artist in g.bannedArtists: 
+							self.play()
+							return
+						
 						self.display.set_text(song.split("\n")[1]+" - "+song.split("\n")[3]+" ["+song.split("\n")[2]+"]")
 						
 						myid = "Another random"
