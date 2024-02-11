@@ -294,7 +294,7 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
         </child>
         <child>
           <object class="GtkButton">
-            <property name="label" translatable="yes">Launch local Shares radio</property>
+            <property name="label" translatable="yes">Launch local Shares&amp;Unshared radio</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
@@ -416,6 +416,36 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
                 <property name="position">1</property>
               </packing>
             </child>
+            <child>
+              <object class="GtkButton">
+                <property name="label" translatable="yes">Clear banned artists</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <signal name="clicked" handler="onClearBannedArtists" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="pack-type">end</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton">
+                <property name="label" translatable="yes">Ban current artist for this session</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <signal name="clicked" handler="onBanArtist" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="pack-type">end</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -494,7 +524,8 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
             </child>
             <child>
               <object class="GtkButton">
-                <property name="label" translatable="yes">Download track (to Shares)</property>
+                <property name="label" translatable="yes">Download track
+(to Shares)</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
@@ -504,6 +535,21 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
                 <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton">
+                <property name="label" translatable="yes">Download track
+(to Unshared)</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <signal name="clicked" handler="onDownloadUnshared" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">4</property>
               </packing>
             </child>
             <child>
@@ -519,7 +565,7 @@ Make sure to firstly Discover New Stations Peers before launching the listening.
                 <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="pack-type">end</property>
-                <property name="position">4</property>
+                <property name="position">5</property>
               </packing>
             </child>
           </object>

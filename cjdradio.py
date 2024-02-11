@@ -524,6 +524,46 @@ class Handler:
 				dialog.run()
 				dialog.destroy()
 	
+	def onDownloadUnshared (self, *args): 
+		print("Downloading")
+		if g.radio!=None:
+			print("found radio")
+			home = expanduser("~")
+			basedir=os.path.join(home, ".cjdradio")
+			
+			shared_dir=os.path.join(basedir, "Unshared")
+			
+			if not (os.path.exists(shared_dir)):
+				os.makedirs (shared_dir)
+			
+			if not os.path.exists(os.path.join(shared_dir, g.radio.track)):
+				g.radio.player.stop()
+				
+				os.rename(os.path.join(basedir, "temp.mp3"), os.path.join(shared_dir, g.radio.track))
+				dialog = Gtk.MessageDialog(
+							parent=b.get_object("cjdradio_main_window") ,
+							modal=True,
+							message_type=Gtk.MessageType.INFO,
+							buttons=Gtk.ButtonsType.OK,
+							text="Success.  "
+						)
+				dialog.format_secondary_text("Downloaded to Unshared. MP3s will be reindexed upon next restart. ")
+				dialog.run()
+				dialog.destroy()
+				
+				g.radio.play()
+			else: 
+				dialog = Gtk.MessageDialog(
+							parent=b.get_object("cjdradio_main_window") ,
+							modal=True,
+							message_type=Gtk.MessageType.INFO,
+							buttons=Gtk.ButtonsType.OK,
+							text="Failure.  "
+						)
+				dialog.format_secondary_text("There is already a file of this name in Unshared. Maybe you already d/l'ed it? ")
+				dialog.run()
+				dialog.destroy()
+
 			
 	def onAddPeerIP(self, *args): 
 		newIP=b.get_object("new_peer_ip").get_text()
@@ -666,6 +706,11 @@ class internetRadio():
 				if song!='':
 					self.track=song.split('\n')[0]
 					print (self.track)
+					self.artist = song.split("\n")[1]
+					
+					if self.artist in g.bannedArtists: 
+						self.play()
+						return
 					#add metadata
 					valid=True
 					r = requests.get("http://["+self.ip+"]:55227/mp3?"+urllib.parse.quote(self.track, safe=''), timeout = 8, stream = True)
@@ -690,11 +735,7 @@ class internetRadio():
 						em.event_attach(vlc.EventType.MediaPlayerEndReached, self.onEnded, self.player)
 
 						
-						self.artist = song.split("\n")[1]
-						
-						if self.artist in g.bannedArtists: 
-							self.play()
-							return
+
 						
 						self.display.set_text(song.split("\n")[1]+" - "+song.split("\n")[3]+" ["+song.split("\n")[2]+"]")
 						
@@ -886,7 +927,17 @@ class WebRequestHandler(BaseHTTPRequestHandler):
 					for mp3 in files: 
 						if mp3.name.endswith(".mp3"):
 							mp3files.append(mp3)
-							
+					if self.client_address[0]==g.settings_ip6addr : #localmachine
+						unshareddir=os.path.join(basedir, "Unshared")
+						if not os.path.exists(unshareddir):
+							os.makedirs(unshareddir)
+						files = os.scandir(unshareddir)
+						for mp3 in files: 
+							if mp3.name.endswith(".mp3"):
+								mp3files.append(mp3)
+								
+								
+
 					if len(mp3files)>0:		
 						mp3=random.choice(mp3files)
 						artist=''
@@ -907,6 +958,7 @@ class WebRequestHandler(BaseHTTPRequestHandler):
 								reply = mp3.name+"\n"+artist+"\n"+album+"\n"+title
 								completed = True
 					else:
+
 						reply+="No mp3 found, sorry!"
 						completed = True
 			self.wfile.write(reply.encode("utf-8"))
@@ -922,6 +974,24 @@ class WebRequestHandler(BaseHTTPRequestHandler):
 						self.wfile.write(tmp)
 				else:
 					print ("Trying to serve a mp3 file greater than 30000 kilibytes, aborting")
+			else: 
+				if self.client_address[0]==g.settings_ip6addr : 
+				#local machine
+					unshareddir=os.path.join(basedir, "Unshared")
+					if not os.path.exists(unshareddir):
+						os.makedirs(unshareddir)
+
+					filepath = os.path.join(unshareddir, basename)
+					if basename.endswith(".mp3") and os.path.exists(filepath):
+						if not os.path.getsize(filepath) > 30000000:
+							with open(filepath, 'rb') as myfile:
+								tmp = myfile.read()
+								myfile.close()
+								self.wfile.write(tmp)
+						else:
+							print ("Trying to serve a mp3 file greater than 30000 kilibytes, aborting")
+
+					
 					
 if __name__ == "__main__":
 	if len(sys.argv)>=2:
@@ -1028,6 +1098,31 @@ if __name__ == "__main__":
 						with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
 							myfile.write("%s" % tags.title)
 							myfile.close()
+			unshareddir=os.path.join(basedir, "Unshared")
+			if not os.path.exists(unshareddir):
+				os.makedirs(unshareddir)
+			files = os.scandir(unshareddir)
+			for mp3 in files: 
+				if mp3.name.endswith(".mp3"):
+					if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
+						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
+					
+						with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
+							myfile.write("%s" % tags.artist)
+							myfile.close()
+					if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
+						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
+					
+						with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
+							myfile.write("%s" % tags.album)
+							myfile.close()
+					if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
+						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
+					
+						with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
+							myfile.write("%s" % tags.title)
+							myfile.close()
+
 
 			dldir = os.path.join(basedir, "Downloads")
 			if os.path.isdir(dldir):
