@@ -43,63 +43,176 @@ import requests
 
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import socket
+
+def indexing_daemon(g): 
+	if os.path.isdir(basedir):
+		shareddir = g.shared_dir
+		if os.path.isdir(shareddir):
+			datadir = os.path.join(basedir, "MetadataShares")
+			if not os.path.isdir(datadir):
+				os.makedirs(datadir)
+			files = os.scandir(shareddir)
+			for mp3 in files: 
+				if mp3.name.endswith(".mp3"):
+					if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
+						tags = TinyTag.get(os.path.join(shareddir, mp3.name))
+					
+						with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
+							myfile.write("%s" % tags.artist)
+							myfile.close()
+					if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
+						tags = TinyTag.get(os.path.join(shareddir, mp3.name))
+					
+						with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
+							myfile.write("%s" % tags.album)
+							myfile.close()
+					if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
+						tags = TinyTag.get(os.path.join(shareddir, mp3.name))
+					
+						with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
+							myfile.write("%s" % tags.title)
+							myfile.close()
+			unshareddir=os.path.join(basedir, "Unshared")
+			if not os.path.exists(unshareddir):
+				os.makedirs(unshareddir)
+			files = os.scandir(unshareddir)
+			for mp3 in files: 
+				if mp3.name.endswith(".mp3"):
+					if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
+						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
+					
+						with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
+							myfile.write("%s" % tags.artist)
+							myfile.close()
+					if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
+						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
+					
+						with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
+							myfile.write("%s" % tags.album)
+							myfile.close()
+					if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
+						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
+					
+						with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
+							myfile.write("%s" % tags.title)
+							myfile.close()
+
+
+			dldir = os.path.join(basedir, "Downloads")
+			if os.path.isdir(dldir):
+				datadir = os.path.join(basedir, "MetadataDownloads")
+				if not os.path.isdir(datadir):
+					os.makedirs(datadir)
+				files = os.scandir(dldir)
+				for mp3 in files: 
+					if mp3.name.endswith(".mp3"):
+						if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
+							tags = TinyTag.get(os.path.join(shareddir, mp3.name))
+					
+							with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
+								myfile.write("%s" % tags.artist)
+								myfile.close()
+						if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
+							tags = TinyTag.get(os.path.join(shareddir, mp3.name))
+					
+							with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
+								myfile.write("%s" % tags.album)
+								myfile.close()
+						if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
+							tags = TinyTag.get(os.path.join(shareddir, mp3.name))
+					
+							with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
+								myfile.write("%s" % tags.title)
+								myfile.close()
+		else:
+			print("No <$HOME>/.cjdradio/Shares directory found. Aborting mp3 scanning")
+			os.makedirs(shareddir)
+
+	else:
+		print("No <$HOME>/.cjdradio directory found. Aborting mp3 scanning")
+		os.makedirs(basedir)
+
+
+
+	print ("Mp3 scanning finished")
+
+
+
+	sleep(300)
+
 def banner_daemon(g): 
 	import threading
 	while True:
 		sleep(150)
-		lock = threading.Lock()
-		lock.acquire();
-		try:
-			#first off we re-register to the tracker in case it rebooted and forgot us in the meanwhile
-			if len(g.peers)>0: #but only if we registered previously, because we are not traitorware and won't joint the network without prior consent
-				g.set_peers([])
-				
-				newpeers = []
-				
-				
-				
-				g.peers.append(g.get_settings_ip6addr())
-				
-				try: 
-					newpeers = OcsadURLRetriever.retrieveURL("http://["+b.get_object("cb_initial_peers").get_active_text()+"]:55227/listpeers", reqtimeout = 12).split("\n")
 
-					newnewpeers = []
-					for p in newpeers:
-						if not p in g.peers: 
-							newnewpeers.append(p)
-					
+		#first off we re-register to the tracker in case it rebooted and forgot us in the meanwhile
+		if g.registered: #but only if we registered previously, because we are not traitorware and won't joint the network without prior consent
+
+			lock = threading.Lock()
+			lock.acquire();
+			try:
+				g.set_peers([])
+			finally: 
+				lock.release()
+			newpeers = []
+			
+			
+			
+			g.peers.append(g.get_settings_ip6addr())
+			
+			try: 
+				newpeers = OcsadURLRetriever.retrieveURL("http://["+b.get_object("cb_initial_peers").get_active_text()+"]:55227/listpeers", reqtimeout = 12).split("\n")
+
+				newnewpeers = []
+				for p in newpeers:
+					if not p in g.peers: 
+						newnewpeers.append(p)
+				lock = threading.Lock()
+				lock.acquire();
+				try:
 					g.set_peers(g.peers+newnewpeers)
-					
-					if len(sys.argv) == 1:
-						#GUI mode, update gui
+				finally: 
+					lock.release()
+				if len(sys.argv) == 1:
+					#GUI mode, update gui
+					lock = threading.Lock()
+					lock.acquire();
+					try:
 						b.get_object("cbsinglestation").remove_all()
-		
+					finally: 
+						lock.release()
+								
 						for i in g.peers:
-							b.get_object("cbsinglestation").append_text(i)
-						
+							lock = threading.Lock()
+							lock.acquire();
+							try:
+								b.get_object("cbsinglestation").append_text(i)
+							finally: 
+								lock.release()
+					lock = threading.Lock()
+					lock.acquire();
+					try: 
 						b.get_object("cbsinglestation").set_active(0)
 						b.get_object("discover_button").set_label("Discover new stations peers ("+str(len(g.peers))+")")
+					finally: 
+						lock.release()
 
+			except: 
+				print ("Initial peer not responding")
+				
+		#then we can retest each banned peer to see if it pong and if so remove it from banned
+		newBanned = []
+		for p in g.bannedStations: 
+			try: 
+				pong = ''
+				pong = OcsadURLRetriever.retrieveURL("http://["+p+"]:55227/ping",  max_length = 120000, reqtimeout = 8)
+				if pong!='pong':
+					raise ValueError("no replying peer "+p+" on ping request")
+			except: 
+				newBanned.append(p)
+				
+		g.bannedStations = newBanned
 
-				except: 
-					print ("Initial peer not responding")
-					
-			#then we can retest each banned peer to see if it pong and if so remove it from banned
-			newBanned = []
-			for p in g.bannedStations: 
-				try: 
-					pong = ''
-					pong = OcsadURLRetriever.retrieveURL("http://["+p+"]:55227/ping",  max_length = 120000, reqtimeout = 8)
-					if pong!='pong':
-						raise ValueError("no replying peer "+p+" on ping request")
-				except: 
-					newBanned.append(p)
-					
-			g.bannedStations = newBanned
-
-			
-		finally: 
-			lock.release()
 		
 class Cjdradio:
 	g = None;
@@ -136,8 +249,10 @@ class Cjdradio:
 
 
 class Gateway:
-
+	registered = False
 	bannedArtists=[]
+
+	accessList = []
 
 	dling = False;
 
@@ -146,6 +261,8 @@ class Gateway:
 	shared_dir = ''
 
 	scan = None
+	
+	scanThread = None
 	
 	ID = 'Another random'
 	
@@ -205,7 +322,20 @@ class Gateway:
 				if len(sys.argv)==1:
 
 					self.builder.get_object("settings_ip6addr").set_text(self.settings_ip6addr)
-		
+		if os.path.exists(os.path.join(basedir, "settings_access_list.txt")): 
+			#settings_access_list	
+			with open(os.path.join(basedir,'settings_access_list.txt'), 'r') as myfile:
+				self.accessList=myfile.read().split("\n")
+				myfile.close()
+				if len(sys.argv)==1:
+					list_ips = self.accessList
+					
+					self.builder.get_object("cb_access_list").remove_all()
+					
+					for ip in list_ips:
+						if ip!='':
+							self.builder.get_object("cb_access_list").append_text(ip)
+							self.builder.get_object("cb_access_list").set_active(0)
 		peerList = []
 		
 		if os.path.exists(os.path.join(basedir, "settings_peersList.txt")): 
@@ -240,6 +370,8 @@ class Gateway:
 		
 			self.builder.get_object("cb_initial_peers").append_text("fc71:fa3a:414d:fe82:f465:369b:141a:f8c")
 			self.builder.get_object("cb_initial_peers").set_active(0)
+			
+			
 	def shared_dir_scan(self):
 		if self.scan == None:
 			self.scan = os.scandir (self.shared_dir)
@@ -260,6 +392,52 @@ class Handler:
 		
 	def getBuilder(self):
 		return b
+	def onAddAccess(self, *args): 
+		home = expanduser("~")
+		basedir=os.path.join(home, ".cjdradio")
+		
+		
+		ip = b.get_object("access_list_ip").get_text()
+		peersList=''
+
+		if os.path.exists(os.path.join(basedir, "settings_access_list.txt")): 
+			with open(os.path.join(basedir,'settings_access_list.txt'), 'r') as myfile:
+				peersList=myfile.read()
+				myfile.close()
+				
+		peersList+=ip+"\n"	
+				
+		with open(os.path.join(basedir,'settings_access_list.txt'), 'w') as myfile:
+			peersList=myfile.write("%s" % peersList)
+			myfile.close()
+		g.load_settings_from_disk()
+
+	def onDeleteAccess(self, *args): 
+		home = expanduser("~")
+		basedir=os.path.join(home, ".cjdradio")
+		
+		
+		ip = b.get_object("cb_access_list").get_active_text()
+		peersList=''
+
+		if os.path.exists(os.path.join(basedir, "settings_access_list.txt")): 
+			with open(os.path.join(basedir,'settings_access_list.txt'), 'r') as myfile:
+				peersList=myfile.read()
+				myfile.close()
+				
+		newPeersList=[]
+		
+		for i in peersList.split("\n"): 
+			if i!=ip and i!='':
+				newPeersList.append(i)
+				
+		with open(os.path.join(basedir,'settings_access_list.txt'), 'w') as myfile:
+			myfile.write("%s" % "\n".join(newPeersList))
+			myfile.close()
+		g.load_settings_from_disk()
+
+
+		
 	def onMove(self, args):
 		libre = []
 		mp3files = []
@@ -324,9 +502,77 @@ class Handler:
 					buttons=Gtk.ButtonsType.OK,
 					text="Process finished.  "
 				)
-		dialog.format_secondary_text(str(counter)+" files moved as found sharables. They will be indexed upon next restart. ")
+		dialog.format_secondary_text(str(counter)+" files moved as found sharables. They will be indexed upon next indexing. ")
 		dialog.run()
 		dialog.destroy()	
+						
+	def onMoveInverted(self, args):
+		libre = []
+		mp3files = []
+		
+		libre.append(b.get_object("libre1").get_text())
+		libre.append(b.get_object("libre2").get_text())
+		libre.append(b.get_object("libre3").get_text())
+		libre.append(b.get_object("libre4").get_text())
+		libre.append(b.get_object("libre5").get_text())
+		libre.append(b.get_object("libre6").get_text())
+		libre.append(b.get_object("libre7").get_text())
+		libre.append(b.get_object("libre8").get_text())
+		libre.append(b.get_object("libre9").get_text())
+		libre.append(b.get_object("libre10").get_text())
+		libre.append(b.get_object("libre11").get_text())
+		libre.append(b.get_object("libre12").get_text())
+		libre.append(b.get_object("libre13").get_text())
+		libre.append(b.get_object("libre14").get_text())
+		libre.append(b.get_object("libre15").get_text())
+		libre.append(b.get_object("libre16").get_text())
+		libre.append(b.get_object("libre17").get_text())
+		libre.append(b.get_object("libre18").get_text())
+		libre.append(b.get_object("libre19").get_text())
+		libre.append(b.get_object("libre20").get_text())
+		libre.append(b.get_object("libre21").get_text())
+		libre.append(b.get_object("libre22").get_text())
+		libre.append(b.get_object("libre23").get_text())
+		libre.append(b.get_object("libre24").get_text())
+		libre.append(b.get_object("libre25").get_text())
+		libre.append(b.get_object("libre26").get_text())
+		libre.append(b.get_object("libre27").get_text())
+		libre.append(b.get_object("libre28").get_text())
+		
+		shareddir = g.shared_dir
+		
+		home = expanduser("~")
+		basedir=os.path.join(home, ".cjdradio")
+		
+		unshareddir = os.path.join(basedir, "Unshared")
+		if not os.path.exists(unshareddir):
+			os.makedirs(unshareddir)
+		files = os.scandir(shareddir)
+		for mp3 in files: 
+			if mp3.name.endswith(".mp3"):
+				mp3files.append(mp3)
+		counter = 0
+		for mp3file in mp3files:
+			tags = TinyTag.get(os.path.join(shareddir, mp3file.name))
+			
+			tobemoved = True
+			for l in libre: 
+				if not tags.comment is None and l!= '' and l in tags.comment: 
+					tobemoved = False
+			if tobemoved: 
+				counter=counter+1
+				os.rename(os.path.join(shareddir, mp3file.name), os.path.join(unshareddir, mp3file.name))
+		
+		dialog = Gtk.MessageDialog(
+					parent=b.get_object("cjdradio_main_window") ,
+					modal=True,
+					message_type=Gtk.MessageType.INFO,
+					buttons=Gtk.ButtonsType.OK,
+					text="Process finished.  "
+				)
+		dialog.format_secondary_text(str(counter)+" files moved as found unsharables. They will be indexed upon next indexing. ")
+		dialog.run()
+		dialog.destroy()
 						
 	def onMoveHide(self, *args): 
 		b.get_object("move_win").hide()
@@ -335,7 +581,12 @@ class Handler:
 	def onMoveShow(self, *args): 
 		b.get_object("move_win").show()
 
+	def onAccessList(self, *args): 
+		b.get_object("access_list_window").show()
 
+	def onAccessListHide(self, *args): 
+		b.get_object("access_list_window").hide()
+		return True
 		
 	def onBanArtist (self, *args): 
 		g.bannedArtists.append(g.radio.artist)
@@ -476,6 +727,7 @@ class Handler:
 		g.get_builder().get_object("banned").set_label("Clear banned stations")
 
 	def onDiscoverPeers(self, *args):
+		g.registered = True
 		b.get_object("discover_button").set_label("Discovering peers…")
 
 		self.discoverPeers()
@@ -544,9 +796,10 @@ class Handler:
 
 	def onDestroy(self, *args):
 		g.get_webserver().shutdown()
-		g.get_webserverThread().join(1)
+		g.get_webserverThread().join(5)
 		g.bannerdaemon_thread.join(1)
-		print("Stopped web server and bannerdaemon")
+		g.scanThread.join(1)
+		print("Stopped web server, bannerdaemon, scan thread")
 		Gtk.main_quit()
 	def onID(self, *args):
 		g.ID = b.get_object("station_id").get_text()
@@ -584,7 +837,7 @@ class Handler:
 							buttons=Gtk.ButtonsType.OK,
 							text="Success.  "
 						)
-				dialog.format_secondary_text("Downloaded to Shares. MP3s will be reindexed upon next restart. ")
+				dialog.format_secondary_text("Downloaded to Shares. MP3 will be indexed upon next reindexing. ")
 				dialog.run()
 				dialog.destroy()
 				
@@ -624,7 +877,7 @@ class Handler:
 							buttons=Gtk.ButtonsType.OK,
 							text="Success.  "
 						)
-				dialog.format_secondary_text("Downloaded to Unshared. MP3s will be reindexed upon next restart. ")
+				dialog.format_secondary_text("Downloaded to Unshared. MP3 will be indexed upon next reindexing. ")
 				dialog.run()
 				dialog.destroy()
 				
@@ -719,40 +972,41 @@ class internetRadio():
 		running = True
 		
 		import threading
-		lock = threading.Lock()
-		lock.acquire()
+
+	
+	
+		if (self.isMultiPeers): 
+			self.ip = ''
+			while self.ip == '':
+				peer = ''
+				while peer=='' or peer in self.g.bannedStations:
+					tmpPeer = random.choice (self.g.peers)
+					try: 
+						pong = ''
+						pong = OcsadURLRetriever.retrieveURL("http://["+tmpPeer+"]:55227/ping",  max_length = 120000, reqtimeout = 8)
+						if pong!='pong':
+							raise ValueError("no replying peer on song request")
+						else:
+							peer = tmpPeer
+							self.ip = tmpPeer
+					except: 
+						self.g.bannedStations.append(tmpPeer)
+						self.g.get_builder().get_object("cbsinglestation").remove_all()
+						for i in self.g.peers: 
+							if i not in self.g.bannedStations:
+								self.g.get_builder().get_object("cbsinglestation").append_text(i)
+								self.g.get_builder().get_object("cbsinglestation").set_active(0)
+		else: 
+			try: 
+				pong = ''
+				pong = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/ping", max_length = 120000, reqtimeout = 8)
+				if pong!='pong':
+					raise ValueError("no replying peer on song request")
+			except: 
+				lock = threading.Lock()
+				lock.acquire()
 		
-		try: 
-		
-		
-			if (self.isMultiPeers): 
-				self.ip = ''
-				while self.ip == '':
-					peer = ''
-					while peer=='' or peer in self.g.bannedStations:
-						tmpPeer = random.choice (self.g.peers)
-						try: 
-							pong = ''
-							pong = OcsadURLRetriever.retrieveURL("http://["+tmpPeer+"]:55227/ping",  max_length = 120000, reqtimeout = 8)
-							if pong!='pong':
-								raise ValueError("no replying peer on song request")
-							else:
-								peer = tmpPeer
-								self.ip = tmpPeer
-						except: 
-							self.g.bannedStations.append(tmpPeer)
-							self.g.get_builder().get_object("cbsinglestation").remove_all()
-							for i in self.g.peers: 
-								if i not in self.g.bannedStations:
-									self.g.get_builder().get_object("cbsinglestation").append_text(i)
-									self.g.get_builder().get_object("cbsinglestation").set_active(0)
-			else: 
 				try: 
-					pong = ''
-					pong = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/ping", max_length = 120000, reqtimeout = 8)
-					if pong!='pong':
-						raise ValueError("no replying peer on song request")
-				except: 
 					self.g.bannedStations.append(ip)
 					self.g.get_builder().get_object("cbsinglestation").remove_all()
 					for i in self.g.peers: 
@@ -761,84 +1015,87 @@ class internetRadio():
 					self.g.get_builder().get_object("cbsinglestation").set_active(0)
 		
 					return
-				
-				
-				
-
+				finally: 
+					lock.release()
 			
-			char_array=b""
-			running = True
+			
 
-			while len(char_array)==0 and running:
+		
+		char_array=b""
+		running = True
 
-				song = ''
+		while len(char_array)==0 and running:
 
-				try: 
-					song = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/random-mp3");
-					if len(song.split('\n'))<4:
-						song = ''
-						running = False
-				except: 
-					print("Could not contact IP "+self.ip)
-					
-					
+			song = ''
+
+			try: 
+				song = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/random-mp3");
+				if len(song.split('\n'))<4:
+					song = ''
+					running = False
+			except: 
+				print("Could not contact IP "+self.ip)
 				
-				if song!='':
-					self.track=song.split('\n')[0]
-					print (self.track)
-					self.artist = song.split("\n")[1]
+				
+			
+			if song!='':
+				self.track=song.split('\n')[0]
+				print (self.track)
+				self.artist = song.split("\n")[1]
+				
+				if self.artist in g.bannedArtists: 
+					self.play()
+					return
+				#add metadata
+				valid=True
+				r = requests.get("http://["+self.ip+"]:55227/mp3?"+urllib.parse.quote(self.track, safe=''), timeout = 8, stream = True)
+				for char in r.iter_content(1024):
+					char_array+=char
+					if len(char_array)>32000000:
+						char_array=b""
+						valid=False
+						print("MP3 file greater than 32000 kilibytes received, aborting")
+						break
+				print ("Finished download")
+				if len(char_array)>0: 
+					home = expanduser("~")
+					datadir=os.path.join(home, ".cjdradio")
+
+
+					with open(os.path.join(datadir,'temp.mp3'), 'wb') as myfile:
+						myfile.write(char_array)
+						myfile.close()
+					self.player = vlc.MediaPlayer(os.path.join(datadir,'temp.mp3'), 'rb')
+					em = self.player.event_manager()
+					em.event_attach(vlc.EventType.MediaPlayerEndReached, self.onEnded, self.player)
+
 					
-					if self.artist in g.bannedArtists: 
-						self.play()
-						return
-					#add metadata
-					valid=True
-					r = requests.get("http://["+self.ip+"]:55227/mp3?"+urllib.parse.quote(self.track, safe=''), timeout = 8, stream = True)
-					for char in r.iter_content(1024):
-						char_array+=char
-						if len(char_array)>32000000:
-							char_array=b""
-							valid=False
-							print("MP3 file greater than 32000 kilibytes received, aborting")
-							break
-					print ("Finished download")
-					if len(char_array)>0: 
-						home = expanduser("~")
-						datadir=os.path.join(home, ".cjdradio")
 
-
-						with open(os.path.join(datadir,'temp.mp3'), 'wb') as myfile:
-							myfile.write(char_array)
-							myfile.close()
-						self.player = vlc.MediaPlayer(os.path.join(datadir,'temp.mp3'), 'rb')
-						em = self.player.event_manager()
-						em.event_attach(vlc.EventType.MediaPlayerEndReached, self.onEnded, self.player)
-
-						
-
-						
-						self.display.set_text(song.split("\n")[1]+" - "+song.split("\n")[3]+" ["+song.split("\n")[2]+"]")
-						
-						myid = "Another random"
-						
-						try: 
-							myid = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/id")
-							
-						except: 
-							pass
-						if len(myid)>60:
-							myid = myid[0-60]	
-							
-						self.g.get_builder().get_object("lasttuned").set_text(self.ip+"\n"+myid)
+					
+					self.display.set_text(song.split("\n")[1]+" - "+song.split("\n")[3]+" ["+song.split("\n")[2]+"]")
+					
+					myid = "Another random"
 					
 					try: 
-						self.player.play()
+						myid = OcsadURLRetriever.retrieveURL("http://["+self.ip+"]:55227/id")
+						
 					except: 
-						self.play()
-			if not running: 
-				self.play()
-		finally: 
-			lock.release()
+						pass
+					if len(myid)>60:
+						myid = myid[0-60]	
+					lock = threading.Lock()
+					lock.acquire()
+					
+					try: 
+						self.g.get_builder().get_object("lasttuned").set_text(self.ip+"\n"+myid)
+					finally: 
+						lock.release()
+				try: 
+					self.player.play()
+				except: 
+					self.play()
+		if not running: 
+			self.play()
 	def stop(self):
 		self.player.stop()
 	
@@ -1009,7 +1266,7 @@ class WebRequestHandler(BaseHTTPRequestHandler):
 					for mp3 in files: 
 						if mp3.name.endswith(".mp3"):
 							mp3files.append(mp3)
-					if self.client_address[0]==g.settings_ip6addr : #localmachine
+					if self.client_address[0]==g.settings_ip6addr or self.client_address[0] in g.accessList: #localmachine or allowed one
 						unshareddir=os.path.join(basedir, "Unshared")
 						if not os.path.exists(unshareddir):
 							os.makedirs(unshareddir)
@@ -1057,8 +1314,8 @@ class WebRequestHandler(BaseHTTPRequestHandler):
 				else:
 					print ("Trying to serve a mp3 file greater than 30000 kilibytes, aborting")
 			else: 
-				if self.client_address[0]==g.settings_ip6addr : 
-				#local machine
+				if self.client_address[0]==g.settings_ip6addr or self.client_address[0] in g.accessList: 
+				#local machine or allowed one
 					unshareddir=os.path.join(basedir, "Unshared")
 					if not os.path.exists(unshareddir):
 						os.makedirs(unshareddir)
@@ -1072,6 +1329,26 @@ class WebRequestHandler(BaseHTTPRequestHandler):
 								self.wfile.write(tmp)
 						else:
 							print ("Trying to serve a mp3 file greater than 30000 kilibytes, aborting")
+		if path=="/mp3-catalog": 
+			reply = ''
+			completed = False
+			while not completed:
+					flacfiles=[]
+					files = os.scandir(g.shared_dir)
+					for flac in files: 
+						if flac.name.endswith(".mp3"):
+							flacfiles.append(flac.name)
+							
+					if len(flacfiles)>0:
+						size = 0		
+						for flac in flacfiles:
+							reply+=flac+"\n"
+							
+						completed = True
+					else:
+						reply=""
+						completed = True
+			self.wfile.write(reply.encode("utf-8"))
 
 					
 					
@@ -1152,102 +1429,14 @@ if __name__ == "__main__":
 		print ('Scanning <$HOME>/.cjdradio directory for mp3 tags');
 		g.shared_dir = os.path.join(basedir, "Shares")
 
-	
-	if os.path.isdir(basedir):
-		shareddir = g.shared_dir
-		if os.path.isdir(shareddir):
-			datadir = os.path.join(basedir, "MetadataShares")
-			if not os.path.isdir(datadir):
-				os.makedirs(datadir)
-			files = os.scandir(shareddir)
-			for mp3 in files: 
-				if mp3.name.endswith(".mp3"):
-					if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
-						tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.artist)
-							myfile.close()
-					if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
-						tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.album)
-							myfile.close()
-					if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
-						tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.title)
-							myfile.close()
-			unshareddir=os.path.join(basedir, "Unshared")
-			if not os.path.exists(unshareddir):
-				os.makedirs(unshareddir)
-			files = os.scandir(unshareddir)
-			for mp3 in files: 
-				if mp3.name.endswith(".mp3"):
-					if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
-						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.artist)
-							myfile.close()
-					if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
-						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.album)
-							myfile.close()
-					if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
-						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.title)
-							myfile.close()
-
-
-			dldir = os.path.join(basedir, "Downloads")
-			if os.path.isdir(dldir):
-				datadir = os.path.join(basedir, "MetadataDownloads")
-				if not os.path.isdir(datadir):
-					os.makedirs(datadir)
-				files = os.scandir(dldir)
-				for mp3 in files: 
-					if mp3.name.endswith(".mp3"):
-						if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
-							tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
-							with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
-								myfile.write("%s" % tags.artist)
-								myfile.close()
-						if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
-							tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
-							with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
-								myfile.write("%s" % tags.album)
-								myfile.close()
-						if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
-							tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
-							with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
-								myfile.write("%s" % tags.title)
-								myfile.close()
-
-
-
-			print ("Mp3 scanning finished")
-
+	o.getGateway().scanthread = Thread( target = indexing_daemon, args = (o.getGateway(), ))
+	o.getGateway().scanthread.daemon = True
+	o.getGateway().scanthread.start()
 						
-		else:
-			print("No <$HOME>/.cjdradio/Shares directory found. Aborting mp3 scanning")
-			os.makedirs(shareddir)
-
-	else:
-		print("No <$HOME>/.cjdradio directory found. Aborting mp3 scanning")
-		os.makedirs(basedir)
 	if len(sys.argv)==6:
 		o.getGateway().settings_ip6addr=sys.argv[5]
 		print ("contacting initial peer")
+		g.registered = True
 		g.set_processedPeers([])
 		g.set_peers([])
 		
