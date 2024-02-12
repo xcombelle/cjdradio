@@ -45,100 +45,101 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import socket
 
 def indexing_daemon(g): 
-	if os.path.isdir(basedir):
-		shareddir = g.shared_dir
-		if os.path.isdir(shareddir):
-			datadir = os.path.join(basedir, "MetadataShares")
-			if not os.path.isdir(datadir):
-				os.makedirs(datadir)
-			files = os.scandir(shareddir)
-			for mp3 in files: 
-				if mp3.name.endswith(".mp3"):
-					if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
-						tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.artist)
-							myfile.close()
-					if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
-						tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.album)
-							myfile.close()
-					if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
-						tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.title)
-							myfile.close()
-			unshareddir=os.path.join(basedir, "Unshared")
-			if not os.path.exists(unshareddir):
-				os.makedirs(unshareddir)
-			files = os.scandir(unshareddir)
-			for mp3 in files: 
-				if mp3.name.endswith(".mp3"):
-					if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
-						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.artist)
-							myfile.close()
-					if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
-						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.album)
-							myfile.close()
-					if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
-						tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
-					
-						with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
-							myfile.write("%s" % tags.title)
-							myfile.close()
-
-
-			dldir = os.path.join(basedir, "Downloads")
-			if os.path.isdir(dldir):
-				datadir = os.path.join(basedir, "MetadataDownloads")
+	while True: 
+		if os.path.isdir(basedir):
+			shareddir = g.shared_dir
+			if os.path.isdir(shareddir):
+				datadir = os.path.join(basedir, "MetadataShares")
 				if not os.path.isdir(datadir):
 					os.makedirs(datadir)
-				files = os.scandir(dldir)
+				files = os.scandir(shareddir)
 				for mp3 in files: 
 					if mp3.name.endswith(".mp3"):
 						if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
 							tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
+						
 							with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
 								myfile.write("%s" % tags.artist)
 								myfile.close()
 						if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
 							tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
+						
 							with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
 								myfile.write("%s" % tags.album)
 								myfile.close()
 						if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
 							tags = TinyTag.get(os.path.join(shareddir, mp3.name))
-					
+						
 							with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
 								myfile.write("%s" % tags.title)
 								myfile.close()
+				unshareddir=os.path.join(basedir, "Unshared")
+				if not os.path.exists(unshareddir):
+					os.makedirs(unshareddir)
+				files = os.scandir(unshareddir)
+				for mp3 in files: 
+					if mp3.name.endswith(".mp3"):
+						if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
+							tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
+						
+							with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
+								myfile.write("%s" % tags.artist)
+								myfile.close()
+						if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
+							tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
+						
+							with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
+								myfile.write("%s" % tags.album)
+								myfile.close()
+						if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
+							tags = TinyTag.get(os.path.join(unshareddir, mp3.name))
+						
+							with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
+								myfile.write("%s" % tags.title)
+								myfile.close()
+
+
+				dldir = os.path.join(basedir, "Downloads")
+				if os.path.isdir(dldir):
+					datadir = os.path.join(basedir, "MetadataDownloads")
+					if not os.path.isdir(datadir):
+						os.makedirs(datadir)
+					files = os.scandir(dldir)
+					for mp3 in files: 
+						if mp3.name.endswith(".mp3"):
+							if not os.path.exists(os.path.join(datadir, mp3.name+".artist.txt")):
+								tags = TinyTag.get(os.path.join(shareddir, mp3.name))
+						
+								with open(os.path.join(datadir,mp3.name+'.artist.txt'), 'w') as myfile:
+									myfile.write("%s" % tags.artist)
+									myfile.close()
+							if not os.path.exists(os.path.join(datadir, mp3.name+".album.txt")):
+								tags = TinyTag.get(os.path.join(shareddir, mp3.name))
+						
+								with open(os.path.join(datadir,mp3.name+'.album.txt'), 'w') as myfile:
+									myfile.write("%s" % tags.album)
+									myfile.close()
+							if not os.path.exists(os.path.join(datadir, mp3.name+".title.txt")):
+								tags = TinyTag.get(os.path.join(shareddir, mp3.name))
+						
+								with open(os.path.join(datadir,mp3.name+'.title.txt'), 'w') as myfile:
+									myfile.write("%s" % tags.title)
+									myfile.close()
+			else:
+				print("No <$HOME>/.cjdradio/Shares directory found. Aborting mp3 scanning")
+				os.makedirs(shareddir)
+
 		else:
-			print("No <$HOME>/.cjdradio/Shares directory found. Aborting mp3 scanning")
-			os.makedirs(shareddir)
-
-	else:
-		print("No <$HOME>/.cjdradio directory found. Aborting mp3 scanning")
-		os.makedirs(basedir)
+			print("No <$HOME>/.cjdradio directory found. Aborting mp3 scanning")
+			os.makedirs(basedir)
 
 
 
-	print ("Mp3 scanning finished")
+		print ("Mp3 scanning finished")
 
 
 
-	sleep(300)
+		sleep(300)
 
 def banner_daemon(g): 
 	import threading
