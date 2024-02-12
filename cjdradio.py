@@ -967,12 +967,18 @@ class internetRadio():
 		self.player = vlc.MediaPlayer()
 		
 	def play(self):
-		
-		self.display.set_text("Selecting a station and buffering…")
-					
 		running = True
 		
 		import threading
+
+
+
+		lock = threading.Lock()
+		lock.acquire()
+		try: 
+			self.display.set_text("Selecting a station and buffering…")
+		except: 
+			lock.release()			
 
 	
 	
@@ -1049,15 +1055,23 @@ class internetRadio():
 					return
 				#add metadata
 				valid=True
+			
 				r = requests.get("http://["+self.ip+"]:55227/mp3?"+urllib.parse.quote(self.track, safe=''), timeout = 8, stream = True)
 				for char in r.iter_content(1024):
-					char_array+=char
+					lock = threading.Lock()
+			
+					lock.acquire()
+					try: 
+						char_array+=char
+					finally: 
+						lock.release()
 					if len(char_array)>32000000:
 						char_array=b""
 						valid=False
 						print("MP3 file greater than 32000 kilibytes received, aborting")
 						break
 				print ("Finished download")
+			
 				if len(char_array)>0: 
 					home = expanduser("~")
 					datadir=os.path.join(home, ".cjdradio")
