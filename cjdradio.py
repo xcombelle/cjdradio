@@ -203,17 +203,21 @@ def banner_daemon(g):
 				
 		#then we can retest each banned peer to see if it pong and if so remove it from banned
 		newBanned = []
-		for p in g.bannedStations: 
-			try: 
-				pong = ''
-				pong = OcsadURLRetriever.retrieveURL("http://["+p+"]:55227/ping",  max_length = 120000, reqtimeout = 8)
-				if pong!='pong':
-					raise ValueError("no replying peer "+p+" on ping request")
-			except: 
-				newBanned.append(p)
-				
-		g.bannedStations = newBanned
-
+		for p in g.bannedStations:
+			if p!='':
+				try: 
+					pong = ''
+					pong = OcsadURLRetriever.retrieveURL("http://["+p+"]:55227/ping",  max_length = 120000, reqtimeout = 8)
+					if pong!='pong':
+						raise ValueError("no replying peer "+p+" on ping request")
+				except: 
+					newBanned.append(p)
+		lock = threading.Lock()		
+		lock.acquire()
+		try:
+			g.bannedStations = newBanned
+		finally: 
+			lock.release()
 		
 class Cjdradio:
 	g = None;
