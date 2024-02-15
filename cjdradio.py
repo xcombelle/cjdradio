@@ -730,6 +730,13 @@ class Handler:
 				print("radio is playing")
 				g.radio.stop()
 				g.radio.play()
+			else:
+				if not g.radio.threadPlay is None:
+					print ("radio is buffering")
+					g.radio.threadPlay.join(1)
+					g.radio.play()
+					
+				
 	def onStop (self, *args):
 		print("Stopping")
 		if g.radio!=None:
@@ -970,7 +977,9 @@ class internetRadio():
 	ips = []
 	ip=''
 	track = ''
-	player=None;
+	player=None
+	
+	threadPlay = None
 	
 	artist = ''
 	
@@ -982,8 +991,8 @@ class internetRadio():
 		self.player = vlc.MediaPlayer()
 		
 	def play(self):
-		p = Thread(target = self.playThread)
-		p.start()
+		self.threadPlay = Thread(target = self.playThread)
+		self.threadPlay.start()
 		
 	def playThread(self):
 		running = True
