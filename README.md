@@ -1,10 +1,7 @@
 * installation of dependencies
+  pip install -r requirements.txt
+
   
-  pip install python-vlc
-
-  pip install tinytag
-
-  pip install pytz
 * run the app
 
   python3 cjdradio.py
