@@ -47,7 +47,13 @@ import socket
 def indexing_daemon(g): 
 	while True: 
 		if os.path.isdir(basedir):
-			shareddir = g.shared_dir
+			import threading
+			lock = threading.Lock()
+			lock.acquire()
+			try: 
+				shareddir = g.shared_dir
+			finally:
+				lock.release()
 			if os.path.isdir(shareddir):
 				datadir = os.path.join(basedir, "MetadataShares")
 				if not os.path.isdir(datadir):
@@ -176,28 +182,31 @@ def banner_daemon(g):
 					lock.release()
 				if len(sys.argv) == 1:
 					#GUI mode, update gui
-					lock = threading.Lock()
-					lock.acquire();
-					try:
-						b.get_object("cbsinglestation").remove_all()
-					finally: 
-						lock.release()
-								
-						for i in g.peers:
-							lock = threading.Lock()
-							lock.acquire();
-							try:
-								b.get_object("cbsinglestation").append_text(i)
-							finally: 
-								lock.release()
-					lock = threading.Lock()
-					lock.acquire();
+					g.cbsinglestationlock = True
 					try: 
-						b.get_object("cbsinglestation").set_active(0)
-						b.get_object("discover_button").set_label("Discover new stations peers ("+str(len(g.peers))+")")
+						lock = threading.Lock()
+						lock.acquire();
+						try:
+							b.get_object("cbsinglestation").remove_all()
+						finally: 
+							lock.release()
+									
+							for i in g.peers:
+								lock = threading.Lock()
+								lock.acquire();
+								try:
+									b.get_object("cbsinglestation").append_text(i)
+								finally: 
+									lock.release()
+						lock = threading.Lock()
+						lock.acquire();
+						try: 
+							b.get_object("cbsinglestation").set_active(0)
+							b.get_object("discover_button").set_label("Discover new stations peers ("+str(len(g.peers))+")")
+						finally: 
+							lock.release()
 					finally: 
-						lock.release()
-
+						g.cbsinglestationlock = False
 			except: 
 				print ("Initial peer not responding")
 				
@@ -280,7 +289,9 @@ class Gateway:
 	processedPeers=[]
 	peers = []
 	
-	h = None;
+	h = None
+	
+	cbsinglestationlock=False;
 
 	def set_processedPeers(self, peerList):
 		self.processedPeers=peerList
@@ -971,6 +982,10 @@ class internetRadio():
 		self.player = vlc.MediaPlayer()
 		
 	def play(self):
+		p = Thread(target = self.playThread)
+		p.start()
+		
+	def playThread(self):
 		running = True
 		
 		import threading
@@ -1018,13 +1033,21 @@ class internetRadio():
 				lock.acquire()
 		
 				try: 
+					while g.cbsinglestationlock:
+						sleep (0.5)
 					self.g.bannedStations.append(ip)
 					self.g.get_builder().get_object("cbsinglestation").remove_all()
 					for i in self.g.peers: 
 						if i not in self.g.bannedStations:
+							while g.cbsinglestationlock:
+								sleep (0.5)
+							
 							self.g.get_builder().get_object("cbsinglestation").append_text(i)
+
+					while g.cbsinglestationlock:
+						sleep (0.5)
 					self.g.get_builder().get_object("cbsinglestation").set_active(0)
-		
+					lock.release()
 					return
 				finally: 
 					lock.release()
@@ -1084,6 +1107,9 @@ class internetRadio():
 					with open(os.path.join(datadir,'temp.mp3'), 'wb') as myfile:
 						myfile.write(char_array)
 						myfile.close()
+					if not self.player is None and self.player.is_playing():
+						self.player.stop() 
+					
 					self.player = vlc.MediaPlayer(os.path.join(datadir,'temp.mp3'), 'rb')
 					em = self.player.event_manager()
 					em.event_attach(vlc.EventType.MediaPlayerEndReached, self.onEnded, self.player)
@@ -1112,9 +1138,9 @@ class internetRadio():
 				try: 
 					self.player.play()
 				except: 
-					self.play()
+					self.playThread()
 		if not running: 
-			self.play()
+			self.playThread()
 	def stop(self):
 		self.player.stop()
 	
